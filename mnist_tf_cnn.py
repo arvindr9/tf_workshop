@@ -7,12 +7,15 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
 
-def conv_model(x, filters, mode='train'):
-  x = tf.reshape(x, [tf.shape(x)[0], 28, 28, 1], name = 'reshapor')
-  x = tf.layers.conv2d(x, filters, [3,3], activation = 'relu', name = 'W1')
+def conv_model(x):
+  x = tf.reshape(x, [tf.shape(x)[0], 28, 28, 1])
+  x = tf.layers.conv2d(x, 32, [5, 5], activation = 'relu')
+  x = tf.layers.max_pooling2d(x, pool_size = 2, strides = 2)
+  x = tf.layers.conv2d(x, 64, [5, 5], activation = 'relu')
+  x = tf.layers.max_pooling2d(x, pool_size = 2, strides = 2)
   x = tf.layers.flatten(x)
-  x = tf.layers.dense(x, 1000, activation = 'relu', name = 'W2')
-  x = tf.layers.dense(x, 10, activation = 'softmax', name = 'W3')
+  x = tf.layers.dense(x, 1000, activation = 'relu')
+  x = tf.layers.dense(x, 10, activation = 'softmax')
   return x
 
 def main():
@@ -21,7 +24,7 @@ def main():
 
   # Create the model
   x = tf.placeholder(tf.float32, [None, 784])
-  y = conv_model(x, 32)
+  y = conv_model(x)
 
   # Define loss and optimizer
   y_ = tf.placeholder(tf.float32, [None, 10])
@@ -40,17 +43,20 @@ def main():
   train_step = tf.train.GradientDescentOptimizer(0.1).minimize(cross_entropy)
 
   sess = tf.InteractiveSession()
+  
+  summary_writer = tf.summary.FileWriter('./summaries_cnn', sess.graph)
   tf.global_variables_initializer().run()
-  # Train
-  for step in range(10):
-    batch_xs, batch_ys = mnist.train.next_batch(100)
-    print("batch {}".format(step))
-    sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+#   # Train
+#   for _ in range(1000):
+#     batch_xs, batch_ys = mnist.train.next_batch(100)
+#     sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
 
-  # Test trained model
-  correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-  accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-  print(sess.run(accuracy, feed_dict={x: mnist.test.images,
-y_: mnist.test.labels}))
+#   # Test trained model
+#   correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+#   accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+#   print(sess.run(accuracy, feed_dict={x: mnist.test.images,
+# y_: mnist.test.labels}))
+  
 
-main()
+if __name__ == '__main__':
+  main()
